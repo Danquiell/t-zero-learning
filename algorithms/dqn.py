@@ -122,9 +122,14 @@ class ReplayBuffer:
         """Store one transition, overwriting the oldest one when full.
 
         """
-        # ==================== YOUR CODE HERE (Part 1a) ====================
-        raise NotImplementedError("Implement ReplayBuffer.add")
-        # ==================================================================
+        i = self.pos
+        self.observations[i] = obs
+        self.next_observations[i] = next_obs
+        self.actions[i, 0] = action
+        self.rewards[i, 0] = reward
+        self.dones[i, 0] = done
+        self.pos = (i + 1) % self.capacity
+        self.size = min(self.size + 1, self.capacity)
 
     def sample(self, batch_size: int) -> Batch:
         """Sample ``batch_size`` stored transitions uniformly at random.
@@ -134,18 +139,28 @@ class ReplayBuffer:
         next_observations (B, *obs_shape), rewards (B, 1), dones (B, 1).
 
         """
-        # ==================== YOUR CODE HERE (Part 1b) ====================
-        raise NotImplementedError("Implement ReplayBuffer.sample")
-        # ==================================================================
+        idx = np.random.randint(0, self.size, size=batch_size)
+
+        def to_t(array, dtype=torch.float32):
+            return torch.as_tensor(array[idx], dtype=dtype, device=self.device)
+
+        return Batch(
+            observations=to_t(self.observations),
+            actions=to_t(self.actions, torch.int64),
+            next_observations=to_t(self.next_observations),
+            rewards=to_t(self.rewards),
+            dones=to_t(self.dones),
+        )
 
 
 def compute_td_targets(target_network, batch: Batch, gamma: float) -> torch.Tensor:
     """Compute the one-step TD target for a batch of transitions.
 
     """
-    # ===================== YOUR CODE HERE (Part 2) =====================
-    raise NotImplementedError("Implement compute_td_targets")
-    # ===================================================================
+    next_q = target_network(batch.next_observations).max(dim=1).values
+    rewards = batch.rewards.flatten()
+    dones = batch.dones.flatten()
+    return rewards + gamma * next_q * (1.0 - dones)
 
 
 def linear_schedule(start_e: float, end_e: float, duration: int, t: int) -> float:

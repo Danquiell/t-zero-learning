@@ -1,0 +1,34 @@
+# Config final da Parte 4 (LunarLander-v3). O que mudou esta marcado com "era".
+
+algorithm: ppo
+env_id: LunarLander-v3
+seed: 1
+cuda: false             # CPU is plenty for this env
+total_timesteps: 1000000 # ~8 min on one CPU core; Part 4 allows up to 2000000
+num_envs: 16            # era 4
+
+track: true             # log metrics to Weights & Biases (set WANDB_PROJECT in .env)
+capture_video: true     # record a video during the final evaluation
+save_model: true        # write model.pt + run a final evaluation
+checkpoint_every: 0
+
+network: DiscreteActorCritic   # your network from the A2C assignment
+network_kwargs:                # passed to its constructor — see its signature
+  activation: Tanh
+  hidden_layers_size: 64
+
+ppo:
+  learning_rate: 2.5e-4
+  anneal_lr: true
+  num_steps: 256        # era 128
+  gamma: 0.999          # era 0.99
+  gae_lambda: 0.98      # era 0.95
+  num_minibatches: 32   # era 4; minibatch continua 128 = 4096 / 32
+  update_epochs: 10     # era 4
+  norm_adv: true
+  clip_coef: 0.2
+  clip_vloss: false     # era true
+  ent_coef: 0.01
+  vf_coef: 0.5
+  max_grad_norm: 0.5
+  target_kl: null
